@@ -94,3 +94,55 @@ class PrivateRecipeApiTest(TestCase):
         serializer = RecipeDetailSerializer(recipe)
 
         self.assertEqual(res.data, serializer.data)
+
+    def test_creat_basic_recipe(self):
+        payload = {
+            'title': 'chocolate cheesecake',
+            'time_minutes': 30,
+            'price': 5.00
+        }
+        res = self.client.post(RECIPES_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
+        recipe = Recipe.objects.get(id=res.data['id'])
+        for key in payload.keys():
+            self.assertEqual(payload[key], getattr(recipe, key))
+
+    def test_creat_recipe_with_tags(self):
+        tag1 = sample_tag(user=self.user, name='chocolate')
+        tag2 = sample_tag(user=self.user, name='cheese')
+        payload = {
+            'title': 'chocolate cheesecake',
+            'time_minutes': 30,
+            'price': 5.00,
+            'tags': [tag1.id, tag2.id]
+        }
+        res = self.client.post(RECIPES_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
+        recipe = Recipe.objects.get(id=res.data['id'])
+        tags = recipe.tags.all()
+        self.assertEqual(tags.count(), 2)
+        self.assertIn(tag1, tags)
+        self.assertIn(tag2, tags)
+
+    def test_creat_recipe_with_ingridients(self):
+        ingridient1 = sample_ingridient(user=self.user, name='chocolate')
+        ingridient2 = sample_ingridient(user=self.user, name='cheese')
+        payload = {
+            'title': 'chocolate cheesecake',
+            'time_minutes': 30,
+            'price': 5.00,
+            'ingridients': [ingridient1.id, ingridient2.id]
+        }
+        res = self.client.post(RECIPES_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
+        recipe = Recipe.objects.get(id=res.data['id'])
+        ingridients = recipe.ingridients.all()
+        self.assertEqual(ingridients.count(), 2)
+        self.assertIn(ingridient1, ingridients)
+        self.assertIn(ingridient2, ingridients)
